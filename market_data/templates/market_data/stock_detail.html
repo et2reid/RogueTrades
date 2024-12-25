@@ -1,0 +1,71 @@
+<!-- market_data/templates/market_data/stock_detail.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">{{ company_data.Name }} ({{ symbol }})</h1>
+
+    <!-- Tabs -->
+    <div class="mb-4 border-b">
+        <ul class="flex flex-wrap -mb-px" id="stockTabs" role="tablist">
+            <li class="mr-2">
+                <button class="inline-block p-4 border-b-2 border-blue-500 text-blue-500"
+                        id="summary-tab" data-tab="summary">
+                    Summary
+                </button>
+            </li>
+            <li class="mr-2">
+                <button class="inline-block p-4 border-b-2 border-transparent hover:border-gray-300"
+                        id="options-tab" data-tab="options">
+                    Options
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="summary" class="tab-content">
+        <!-- Summary content will go here -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 border rounded">
+                <h3 class="font-bold mb-2">Price Data</h3>
+                <p>Open: {{ quote_data.open }}</p>
+                <p>High: {{ quote_data.high }}</p>
+                <p>Low: {{ quote_data.low }}</p>
+                <p>Close: {{ quote_data.close }}</p>
+                <p>Volume: {{ quote_data.volume }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="options" class="tab-content hidden">
+        <!-- Options content will go here -->
+        <div class="overflow-x-auto">
+            <!-- We'll implement the options chain display next -->
+        </div>
+    </div>
+</div>
+
+<script>
+// Basic tab switching functionality
+document.querySelectorAll('[data-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tab.dataset.tab).classList.remove('hidden');
+        
+        // Update tab styles
+        document.querySelectorAll('[data-tab]').forEach(t => {
+            t.classList.remove('border-blue-500', 'text-blue-500');
+            t.classList.add('border-transparent');
+        });
+        tab.classList.add('border-blue-500', 'text-blue-500');
+        tab.classList.remove('border-transparent');
+    });
+});
+</script>
+{% endblock %}

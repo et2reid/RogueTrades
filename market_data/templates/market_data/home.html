@@ -1,0 +1,30 @@
+<!-- market_data/templates/market_data/home.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">RogueTrades Stock Analysis</h1>
+    
+    <form action="{% url 'market_data:stock_detail' 'dummy' %}" method="GET" 
+          class="max-w-md" id="stock-form">
+        <div class="flex gap-4">
+            <input type="text" name="symbol" 
+                   class="flex-1 p-2 border rounded"
+                   placeholder="Enter stock symbol (e.g., AAPL)"
+                   required>
+            <button type="submit" 
+                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Search
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('stock-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const symbol = this.querySelector('input[name="symbol"]').value;
+    window.location.href = "{% url 'market_data:stock_detail' 'dummy' %}".replace('dummy', symbol);
+});
+</script>
+{% endblock %}
