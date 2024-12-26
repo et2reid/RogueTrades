@@ -1,6 +1,6 @@
 # market_data/urls.py
 from django.urls import path
-from .views import HomeView, StockDetailView
+from .views import HomeView, StockDetailView  # Removed intraday_data
 
 app_name = 'market_data'
 
