@@ -1,33 +1,53 @@
-from django.shortcuts import render
-
-# Create your views here.
 # market_data/views.py
-from django.shortcuts import render
 from django.views.generic import TemplateView
 from .services.alpha_vantage_service import AlphaVantageService
+import logging
+
+logger = logging.getLogger(__name__)
 
 class HomeView(TemplateView):
     template_name = 'market_data/home.html'
 
 class StockDetailView(TemplateView):
-    template_name = 'market_data/stock_detail.html'
+    template_name = 'market_data/stock_detail.html'  # Back to your original template
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        symbol = self.kwargs.get('symbol')
+        symbol = kwargs.get('symbol', '').upper()
         
-        service = AlphaVantageService()
-        
-        # Fetch data from Alpha Vantage
-        quote_data = service.get_stock_quote(symbol)
-        company_data = service.get_company_overview(symbol)
-        options_data = service.get_options_chain(symbol)
-        
-        context.update({
-            'symbol': symbol,
-            'quote_data': quote_data,
-            'company_data': company_data,
-            'options_data': options_data,
-        })
+        try:
+            service = AlphaVantageService()
+            
+            # Get stock data
+            quote = service.get_stock_quote(symbol)
+            daily_data = service.get_daily_prices(symbol)
+            company_info = service.get_company_overview(symbol)
+            
+            # Process quote data for display
+            latest_price = None
+            if quote and 'Global Quote' in quote:
+                latest_price = {
+                    'price': float(quote['Global Quote']['05. price']),
+                    'change': float(quote['Global Quote']['09. change']),
+                    'change_percent': float(quote['Global Quote']['10. change percent'].rstrip('%')),
+                    'volume': int(quote['Global Quote']['06. volume'])
+                }
+            
+            context.update({
+                'symbol': symbol,
+                'company_info': company_info,
+                'latest_price': latest_price,
+                'daily_data': daily_data,
+                'error': None
+            })
+            
+            logger.info(f"Successfully fetched data for {symbol}")
+            
+        except Exception as e:
+            logger.error(f"Error fetching data for {symbol}: {str(e)}")
+            context.update({
+                'symbol': symbol,
+                'error': "Unable to fetch market data at this time. Please try again later."
+            })
         
         return context

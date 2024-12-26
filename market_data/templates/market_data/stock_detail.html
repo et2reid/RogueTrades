@@ -1,9 +1,27 @@
 <!-- market_data/templates/market_data/stock_detail.html -->
 {% extends "base.html" %}
+{% load humanize %}  {# Add this line at the top #}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ company_data.Name }} ({{ symbol }})</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">{{ company_info.Name|default:symbol }} ({{ symbol }})</h1>
+        {% if latest_price %}
+            <div class="text-right">
+                <div class="text-3xl font-medium">${{ latest_price.price|floatformat:2 }}</div>
+                <p class="text-gray-600">Change:</p>
+                <p class="font-medium {% if latest_price.change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    {{ latest_price.change|floatformat:2 }}
+                </p>
+                <p class="text-gray-600">Change %:</p>
+                <p class="font-medium {% if latest_price.change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    {{ latest_price.change_percent|floatformat:2 }}%
+                </p>
+                <p class="text-gray-600">Volume:</p>
+                <p class="font-medium">{{ latest_price.volume|intcomma }}</p>
+            </div>
+        {% endif %}
+    </div>
 
     <!-- Tabs -->
     <div class="mb-4 border-b">
@@ -12,6 +30,12 @@
                 <button class="inline-block p-4 border-b-2 border-blue-500 text-blue-500"
                         id="summary-tab" data-tab="summary">
                     Summary
+                </button>
+            </li>
+            <li class="mr-2">
+                <button class="inline-block p-4 border-b-2 border-transparent hover:border-gray-300"
+                        id="details-tab" data-tab="details">
+                    Details
                 </button>
             </li>
             <li class="mr-2">
@@ -25,23 +49,79 @@
 
     <!-- Tab Content -->
     <div id="summary" class="tab-content">
-        <!-- Summary content will go here -->
-        <div class="grid grid-cols-2 gap-4">
-            <div class="p-4 border rounded">
-                <h3 class="font-bold mb-2">Price Data</h3>
-                <p>Open: {{ quote_data.open }}</p>
-                <p>High: {{ quote_data.high }}</p>
-                <p>Low: {{ quote_data.low }}</p>
-                <p>Close: {{ quote_data.close }}</p>
-                <p>Volume: {{ quote_data.volume }}</p>
+        <!-- Price Data -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 border rounded shadow-sm">
+                <h3 class="font-bold mb-4 text-lg">Latest Price Data</h3>
+                {% if latest_price %}
+                    <div class="grid grid-cols-2 gap-2">
+                        <p class="text-gray-600">Current Price:</p>
+                        <p class="font-medium">${{ latest_price.price|floatformat:2 }}</p>
+                        <p class="text-gray-600">Change:</p>
+                        <p class="font-medium {% if latest_price.change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ latest_price.change|floatformat:2 }}
+                        </p>
+                        <p class="text-gray-600">Change %:</p>
+                        <p class="font-medium {% if latest_price.change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ latest_price.change_percent|floatformat:2 }}%
+                        </p>
+                        <p class="text-gray-600">Volume:</p>
+                        <p class="font-medium">{{ latest_price.volume|intcomma }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Company Info -->
+            <div class="p-4 border rounded shadow-sm">
+                <h3 class="font-bold mb-4 text-lg">Company Information</h3>
+                {% if company_info %}
+                    <div class="grid grid-cols-2 gap-2">
+                        <p class="text-gray-600">Industry:</p>
+                        <p class="font-medium">{{ company_info.Industry|default:"-" }}</p>
+                        <p class="text-gray-600">Sector:</p>
+                        <p class="font-medium">{{ company_info.Sector|default:"-" }}</p>
+                        <p class="text-gray-600">Market Cap:</p>
+                        <p class="font-medium">{{ company_info.MarketCapitalization|intcomma }}</p>
+                        <p class="text-gray-600">Exchange:</p>
+                        <p class="font-medium">{{ company_info.Exchange|default:"-" }}</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <div id="options" class="tab-content hidden">
-        <!-- Options content will go here -->
+    <div id="details" class="tab-content hidden">
         <div class="overflow-x-auto">
-            <!-- We'll implement the options chain display next -->
+            <table class="min-w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-2 text-left">Date</th>
+                        <th class="px-4 py-2 text-right">Open</th>
+                        <th class="px-4 py-2 text-right">High</th>
+                        <th class="px-4 py-2 text-right">Low</th>
+                        <th class="px-4 py-2 text-right">Close</th>
+                        <th class="px-4 py-2 text-right">Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in daily_data %}
+                        <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                            <td class="px-4 py-2 border-t">{{ day.date|date:"Y-m-d" }}</td>
+                            <td class="px-4 py-2 border-t text-right">${{ day.open|floatformat:2 }}</td>
+                            <td class="px-4 py-2 border-t text-right">${{ day.high|floatformat:2 }}</td>
+                            <td class="px-4 py-2 border-t text-right">${{ day.low|floatformat:2 }}</td>
+                            <td class="px-4 py-2 border-t text-right">${{ day.close|floatformat:2 }}</td>
+                            <td class="px-4 py-2 border-t text-right">{{ day.volume|intcomma }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="options" class="tab-content hidden">
+        <div class="overflow-x-auto">
+            <p class="text-gray-600">Options data will be implemented in the next phase.</p>
         </div>
     </div>
 </div>
